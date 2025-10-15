@@ -1,0 +1,37 @@
+name: Build Tact Smart Contract
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**.tact"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Tact compiler
+        run: npm install -g @tact-lang/compiler @ton/blueprint ton-compiler
+
+      - name: Create build directory
+        run: mkdir -p build
+
+      - name: Compile coin_contract.tact → .fc
+        run: tact --print-func coin_contract.tact > build/coin_contract.fc
+
+      - name: Compile .fc to .pkg
+        run: ton-compiler build build/coin_contract.fc -o build/coin_contract.pkg
+
+      - name: Upload compiled files
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-bluecorn-files
+          path: build/
